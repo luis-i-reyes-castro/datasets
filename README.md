@@ -1,2 +1,2 @@
 # Datasets
-Datasets for my machine learning experiments. 
+Datasets for machine learning experiments. 
