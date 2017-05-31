@@ -39,15 +39,25 @@ def rgb2b(rgb2d, level):
 def image2d(rgb3d):
     ndata, nx, ny = rgb3d.shape
     image_2d = rgb3d.reshape(ndata,nx*ny)
-    return image_2d
+    return image_2d #<class 'numpy.ndarray'> 480, 1920
+
+##Dataset 2d to 3d array
+def image3d(bw2d):
+    bwdata, bwx = bw2d.shape
+    image_3d = bw2d.reshape(bwdata, 640, 3)
+    #print (bwx)
+    return image_3d
     
 #image_file = readfile(os.listdir(os.getcwd()), "0")
 
 #print(image_file)
-image = imread('/home/luiireye/Desktop/original-dataset/binario/1id/00.jpg')
+image = imread('/home/xxx/Desktop/original-dataset/binario/1id/00.jpg')
+#print (image.shape)
 im_pr_2d = image2d(image)
 image_b = rgb2b(im_pr_2d, 128) ##I need change 2d to 3d image result
-plt.imshow(image_b)
-##plt.imshow(image)
+pr = image3d(image_b)
+print(pr.shape[2])
+#print (im_pr_2d.shape)
+plt.imshow(pr)
 #img_gray = rgb2gray(image)
 #plt.imshow(image_gray, cmap=plt.cm.gray) 
