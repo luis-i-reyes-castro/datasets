@@ -1,4 +1,4 @@
 (-) Formatear vision-01 de tal manera que los nombres de imagen esten en el formato: fila_XX_col_YY.jpeg, es decir renombrar las imagenes. 
-(+/-) Completar binary-image para que genere el 3-tensor de todas las fotos. 
-(+) Extender binary-image para que genere los one-hot encodings para cada una de las imagenes. 
+(-) Completar binary-image para que genere el 3-tensor de todas las fotos. 
+(-) Extender binary-image para que genere los one-hot encodings para cada una de las imagenes. 
 
