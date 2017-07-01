@@ -1,71 +1,88 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Jun 22 10:07:00 2017
+@author: Luis I. Reyes-Castro
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
+import os
 from scipy.misc import imread, imshow
 from keras.layers import Input, Flatten, Dense
 from keras.layers import Conv2D
 from keras.models import Model
 from keras.utils.vis_utils import plot_model
 
-rows    = 21
-columns = 32
-num_images = rows * columns
-images_dir = '../vision-02/'
-images_format = 'fila_[XX]_col_[YY].jpg'
+dir_training    = '../find-the-puck/training/'
+dir_validation  = '../find-the-puck/validation/'
+filename_format = 'row_[XX]_col_[YY].jpg'
 
-inputs = np.zeros( shape = ( num_images, 480, 640, 1) )
-output_XX = np.zeros( shape = ( num_images, rows) )
-output_YY = np.zeros( shape = ( num_images, columns) )
+pixels_v = 480
+pixels_h = 640
+rows     = 21
+columns  = 32
+num_training_samples = rows * columns
+
+inputs_train   = np.zeros( ( num_training_samples, pixels_v, pixels_h, 1) )
+output_train_X = np.zeros( ( num_training_samples, rows) )
+output_train_Y = np.zeros( ( num_training_samples, columns) )
 
 for row in range(rows) :
+
     for col in range(columns) :
-        filename = images_dir
-        filename += images_format
+
+        filename = dir_training + filename_format
         filename = filename.replace( '[XX]', str(row).zfill(2) )
         filename = filename.replace( '[YY]', str(col).zfill(2) )
-        print( 'Reading image:', filename)
-        image = imread( filename, flatten = True)
-        image_index = row * columns + col
-        inputs[ image_index, :, :, 0] = image
-        output_XX[ image_index, row] = 1.0
-        output_YY[ image_index, col] = 1.0
 
-image_mean = np.mean( inputs, axis = 0)
-image_std  = np.std( inputs, axis = 0)
+        print( 'Loading training sample:', filename)
+        index = row * columns + col
+        inputs_train[ index, :, :, 0] = imread( filename, flatten = True)
+        output_train_X[ index, row]   = 1.0
+        output_train_Y[ index, col]   = 1.0
 
-inputs -= image_mean
-inputs /= image_std
+inputs_train_mean = np.mean( inputs_train, axis = 0)
+inputs_train_std  = np.std( inputs_train, axis = 0)
+inputs_train = ( inputs_train - inputs_train_mean ) / inputs_train_std
 
-batch_shape = ( 32, 480, 640, 1)
-layer_0 = Input( batch_shape = batch_shape, name = 'Input_images')
-layer_1 = Conv2D( filters = 1, kernel_size = 150, strides = ( 10, 10),
+validation_files = os.listdir('../find-the-puck/validation')
+num_validation_samples = len(validation_files)
+
+inputs_valid   = np.zeros( ( num_validation_samples, pixels_v, pixels_h, 1) )
+output_valid_X = np.zeros( ( num_validation_samples, rows) )
+output_valid_Y = np.zeros( ( num_validation_samples, columns) )
+
+for ( index, filename) in enumerate(validation_files) :
+
+    filename = dir_validation + filename
+    print( 'Loading validation sample:', filename)
+
+    inputs_valid[ index, :, :, 0] = imread( filename, flatten = True)
+
+    row = int( filename[ 4: 6] )
+    col = int( filename[-6:-4] )
+    break
+
+    output_valid_X[ index, row] = 1.0
+    output_valid_Y[ index, col] = 1.0
+
+sample_shape = ( pixels_v, pixels_h, 1)
+layer_0 = Input( shape = sample_shape, name = 'Normalized_Images')
+layer_1 = Conv2D( filters = 1, kernel_size = 150, strides = ( 30, 30),
                   name = '2D-Convolution',
-                  activation = 'softsign')( layer_0)
-layer_2 = Flatten()( layer_1)
+                  activation = 'softsign')( layer_0 )
+layer_2 = Flatten( name = 'Flatten_Image-into-Vector' )( layer_1 )
 
 row_output = Dense( units = rows, activation = 'softmax',
-                    name = 'Row_predictions' )( layer_2)
+                    name = 'Row_Probabilities' )( layer_2 )
 col_output = Dense( units = columns, activation = 'softmax',
-                    name = 'Col_predictions' )( layer_2)
+                    name = 'Col_Probabilities' )( layer_2 )
 
 neural_net = Model( inputs = layer_0, outputs = [ row_output, col_output])
 
-losses = { 'Row_predictions' : 'categorical_crossentropy',
-           'Col_predictions' : 'categorical_crossentropy' }
+losses = { 'Row_Probabilities' : 'categorical_crossentropy',
+           'Col_Probabilities' : 'categorical_crossentropy' }
 neural_net.compile( optimizer = 'sgd', loss = losses)
+plot_model( neural_net, to_file = 'model-architecture.png')
 
-#neural_net.fit( x = inputs, y = [ output_XX, output_YY],
-#                epochs = 10)
-#neural_net.save_weights('prototipo-A.h5')
-
-neural_net.load_weights('prototipo-A.h5')
-
-indices_to_test = np.random.randint( num_images, size = 32)
-inputs_to_test  = inputs[indices_to_test]
-
-( pred_row, pred_col) = neural_net.predict( inputs_to_test)
-plot_model( neural_net, to_file = 'Red-vision.png')
+neural_net.fit( x = inputs_train,
+                y = [ output_train_X, output_train_Y], epochs = 10)
+neural_net.save_weights('model-weights.h5')
+neural_net.load_weights('model-weights.h5')
