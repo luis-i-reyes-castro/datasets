@@ -21,7 +21,6 @@ from keras.callbacks import TensorBoard
 
 #Declares training/validation directories and filename format
 dir_training    = '../find-the-puck/training/'
-dir_validation  = '../find-the-puck/validation/'
 filename_format = 'row_[XX]_col_[YY].jpg'
 save_dir='../find-the-puck/images_generated/'
 
@@ -97,10 +96,10 @@ inputs_train      = ( inputs_train - inputs_train_mean ) / inputs_train_std
 
 
 # Extracts number of validation samples
-validation_files = os.listdir('../find-the-puck/validation')
+validation_files = os.listdir('../find-the-puck/validation2')
 num_validation_samples = len(validation_files)
 
-dir_validation  = '../find-the-puck/validation/'
+dir_validation  = '../find-the-puck/validation2/'
 filename_format = 'row_[XX]_col_[YY].jpg'
 
 
@@ -161,7 +160,7 @@ layer_12 = Conv2D( filters = 64, kernel_size = (3,3), strides = ( 2, 2),
                   name = '2D-Convolution_2',
                   activation = 'relu' )( layer_11 )
 layer_13= MaxPooling2D(pool_size=(2, 2))(layer_12)
-layer_14= Dropout(0.5)(layer_13)
+
 
 
 layer_31 = Conv2D( filters = 64, kernel_size = (3,3), strides = ( 2, 2),
@@ -188,8 +187,8 @@ neural_net.summary()
 #Data generator
 datagen = ImageDataGenerator(width_shift_range=0.05,
                              height_shift_range=0.05,shear_range=0.05,)
-fact_gen=40 #Factor of incresing images
 datagen.fit(inputs_train)
+fact_gen=3 #Factor of incresing images
 
 #optimizer = RMSprop(lr = 0.001, rho = 0.9, epsilon = 1e-08, decay = 0.0)
 losses = { 'Row_Probabilities' : 'categorical_crossentropy'}
@@ -197,7 +196,7 @@ neural_net.compile( optimizer = 'sgd', loss = losses, metrics = ['accuracy'] )
 
 callbacks=[TensorBoard(write_graph = False)]
 neural_net.fit_generator(datagen.flow(inputs_train, output_train, batch_size=32),
-                    steps_per_epoch=(rows*columns)/32, epochs=50, callbacks=callbacks)
+                    steps_per_epoch=(rows*columns)*fact_gen/32, epochs=50, callbacks=callbacks)
 
 
 score= neural_net.evaluate( inputs_valid,output_valid)
