@@ -38,11 +38,10 @@ num_training_samples = rows * columns
 inputs_train   = np.zeros( ( num_training_samples, pixels_v, pixels_h,1) )
 output_train = np.zeros( ( num_training_samples, 9) )
 
-train_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/train_data_file.npy'
-output_train_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/output_train_data_file.npy'
-valid_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/valid_data_file.npy'
-output_valid_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/output_valid_data_file.npy'
-
+train_datafile='train_data_file.npy'
+output_train_datafile='output_train_data_file.npy'
+valid_datafile='valid_data_file.npy'
+output_valid_datafile='output_valid_data_file.npy'
 
 # Open files and generate images
 if not os.path.isfile(train_datafile):
@@ -93,15 +92,12 @@ inputs_train_mean = np.mean( inputs_train, axis = 0)
 inputs_train_std  = np.std( inputs_train)
 inputs_train      = ( inputs_train - inputs_train_mean ) / inputs_train_std
 
-
-
 # Extracts number of validation samples
-validation_files = os.listdir('../find-the-puck/validation2')
+validation_files = os.listdir('../find-the-puck/validation')
 num_validation_samples = len(validation_files)
 
-dir_validation  = '../find-the-puck/validation2/'
+dir_validation  = '../find-the-puck/validation/'
 filename_format = 'row_[XX]_col_[YY].jpg'
-
 
 #Populates validation inputs and outputs
 if not os.path.isfile(valid_datafile):
@@ -148,41 +144,30 @@ inputs_valid_mean = np.mean( inputs_valid, axis = 0)
 inputs_valid_std  = np.std( inputs_valid)
 inputs_valid = ( inputs_valid - inputs_valid_mean ) / inputs_valid_std
 
-
 sample_shape = ( pixels_v, pixels_h, 1)
 
 layer_0 = Input( shape = sample_shape, name = 'Input_Images')
 
-layer_11 = Conv2D( filters = 32, kernel_size = (5,5), strides = ( 2, 2),
-                  name = '2D-Convolution',
-                  activation = 'relu', data_format='channels_last' ,padding='same')( layer_0 )
-layer_12 = Conv2D( filters = 64, kernel_size = (3,3), strides = ( 2, 2),
-                  name = '2D-Convolution_2',
-                  activation = 'relu' )( layer_11 )
-layer_13= MaxPooling2D(pool_size=(2, 2))(layer_12)
+layer_1A = Conv2D( filters = 8, kernel_size = (16,16), strides = (4,4),
+                   name = '2D-Convolution_1',
+                   activation = 'tanh',
+                   data_format = 'channels_last',
+                   padding = 'same' )( layer_0 )
+layer_1B = MaxPooling2D( name = 'Max-pooling_1', pool_size=(4,4) )( layer_1A )
 
+layer_2A = Conv2D( filters = 4, kernel_size = (4,4), strides = (2,2),
+                   name = '2D-Convolution_2',
+                   activation = 'tanh',
+                   data_format = 'channels_last',
+                   padding = 'same' )( layer_1B )
 
-
-layer_31 = Conv2D( filters = 64, kernel_size = (3,3), strides = ( 2, 2),
-                  name = '2D-Convolution_3',
-                  activation = 'relu' )( layer_13)
-layer_32 = Conv2D( filters = 64, kernel_size = (3,3), strides = ( 2, 2),
-                  name = '2D-Convolution_4',
-                  activation = 'relu' )( layer_31)
-layer_33= MaxPooling2D(pool_size=(2, 2))(layer_32)
-layer_34= Dropout(0.5)(layer_33)
-
-
-layer_4 = Flatten( name = 'Flatten_Image-into-Vector' )( layer_33)
-layer_5= Dense(256, activation='relu')(layer_4)
-layer_6= Dropout(0.5)(layer_5)
+layer_3 = Flatten( name = 'Flatten_Image-into-Vector' )( layer_2A )
 
 row_output = Dense( units = 9, activation = 'softmax',
-                    name = 'Row_Probabilities' )( layer_6 )
+                    name = 'Row_Probabilities' )( layer_3 )
 
 neural_net = Model( inputs = layer_0, outputs = row_output)
 neural_net.summary()
-
 
 #Data generator
 datagen = ImageDataGenerator(width_shift_range=0.05,
@@ -192,12 +177,12 @@ fact_gen=3 #Factor of incresing images
 
 #optimizer = RMSprop(lr = 0.001, rho = 0.9, epsilon = 1e-08, decay = 0.0)
 losses = { 'Row_Probabilities' : 'categorical_crossentropy'}
-neural_net.compile( optimizer = 'sgd', loss = losses, metrics = ['accuracy'] )
+neural_net.compile( optimizer = 'adam', loss = losses, metrics = ['accuracy'] )
 
 callbacks=[TensorBoard(write_graph = False)]
 neural_net.fit_generator(datagen.flow(inputs_train, output_train, batch_size=32),
-                    steps_per_epoch=(rows*columns)*fact_gen/32, epochs=50, callbacks=callbacks)
-
+                    steps_per_epoch=(rows*columns)*fact_gen/32,
+                    epochs=500, callbacks=callbacks)
 
 score= neural_net.evaluate( inputs_valid,output_valid)
 print("Error: {} %" .format(100.0-score[1]*100.0))
