@@ -13,7 +13,7 @@ dataset_dirs = [ 'set-A_train/', 'set-B_test/' ]
 # Fraction of samples for the training and test sets
 fraction_train = 0.8
 # Number of frames to throw away while the camera adjusts to light levels
-ramp_frames = 32
+ramp_frames = 16
 
 # Loop indefinitely...
 while True :
