@@ -7,7 +7,7 @@ rows     = [ '1', '2', '3', '4', '5', '6', '7' ]
 cols     = [ 'A', 'B', 'C', 'D' ]
 headings = [ 'East', 'West' ]
 ships    = [ 'Cruiser-1', 'Cruiser-2', 'Cruiser-3', 'Freighter',
-             'Fishing-1', 'Fishing-2', 'Empty' ]
+             'Fishing-1', 'Fishing-2', 'Empty', 'Empty' ]
 # Directory names for the training and test sets
 dataset_dirs = [ 'set-A_train/', 'set-B_test/' ]
 # Fraction of samples for the training and test sets
