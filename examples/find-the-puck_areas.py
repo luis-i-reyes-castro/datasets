@@ -38,10 +38,10 @@ num_training_samples = rows * columns
 inputs_train   = np.zeros( ( num_training_samples, pixels_v, pixels_h,1) )
 output_train = np.zeros( ( num_training_samples, 9) )
 
-train_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/train_data_file.npy'
-output_train_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/output_train_data_file.npy'
-valid_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/valid_data_file.npy'
-output_valid_datafile='C:/Users/Jose Manuel/Documents/GitHub/datasets/examples/output_valid_data_file.npy'
+train_datafile='train_data_file.npy'
+output_train_datafile='output_train_data_file.npy'
+valid_datafile='valid_data_file.npy'
+output_valid_datafile='output_valid_data_file.npy'
 
 
 # Open files and generate images
@@ -148,14 +148,17 @@ inputs_valid_mean = np.mean( inputs_valid, axis = 0)
 inputs_valid_std  = np.std( inputs_valid)
 inputs_valid = ( inputs_valid - inputs_valid_mean ) / inputs_valid_std
 
-
 sample_shape = ( pixels_v, pixels_h, 1)
 
 layer_0 = Input( shape = sample_shape, name = 'Input_Images')
+# shape = ( batch_size, pixels_v, pixels_h, 1)
 
 layer_11 = Conv2D( filters = 32, kernel_size = (5,5), strides = ( 2, 2),
                   name = '2D-Convolution',
-                  activation = 'relu', data_format='channels_last' ,padding='same')( layer_0 )
+                  activation = 'relu',
+                  data_format='channels_last',
+                  padding='same')( layer_0 )
+
 layer_12 = Conv2D( filters = 64, kernel_size = (3,3), strides = ( 2, 2),
                   name = '2D-Convolution_2',
                   activation = 'relu' )( layer_11 )

@@ -77,7 +77,7 @@ sample_shape = ( pixels_v, pixels_h, 1)
 
 layer_0 = Input( shape = sample_shape, name = 'Input_Images')
 
-layer_1 = Conv2D( filters = 1, kernel_size = 150, strides = ( 20, 20),
+layer_1 = Conv2D( filters = 1, kernel_size = (200,200), strides = ( 20, 20),
                   name = '2D-Convolution',
                   activation = 'softsign' )( layer_0 )
 
@@ -99,7 +99,7 @@ plot_model( neural_net, to_file = 'model-architecture.png')
 
 neural_net.fit( x = inputs_train,
                 y = [ output_train_X, output_train_Y], epochs = 100,
-                validation_data = ( inputs_valid, [ output_valid_X, output_valid_Y]) )
+                validation_split = 0.2)
 neural_net.save_weights('model-weights.h5')
 
 #neural_net.load_weights('model-weights.h5')
