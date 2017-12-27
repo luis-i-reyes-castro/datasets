@@ -8,44 +8,90 @@ import numpy as np
 from scipy.misc import imread
 from matplotlib.pyplot import figure, imshow
 from PIL import Image
+import dataset_constants as DSC
 
-PIXEL_ROWS = 480
-PIXEL_COLS = 640
-PIX_LIM_U  = 50
-PIX_LIM_D  = 430
-PIX_LIM_L  = 40
-PIX_LIM_R  = 600
+def get_filenames( directory) :
 
-NUM_ROWS = 7
-NUM_COLS = 4
-NUM_HEAD = 2
-NUM_SHIP = 6
+    if not os.path.exists(directory) :
+        raise Exception( 'Could not find directory: ' + directory )
 
-data_dir = '../set-A_train/'
+    return os.listdir(directory)
 
-if not os.path.exists(data_dir) :
-    raise Exception( 'Could not find directory!' )
+def print_dataset_stats( dataset_dir) :
 
-filenames   = os.listdir(data_dir)
-num_samples = len(filenames)
+    filenames   = get_filenames( dataset_dir)
+    num_samples = len(filenames)
+    fraction    = 100.0 / num_samples
 
-i_tensor = np.zeros( ( num_samples, PIXEL_ROWS, PIXEL_COLS, 3) )
+    percent_ship = { ship : 0.0 for ship in DSC.SHIP }
+    percent_rows = {  row : 0.0 for  row in DSC.ROWS + ['Empty'] }
+    percent_cols = {  col : 0.0 for  col in DSC.COLS + ['Empty'] }
+    percent_head = { head : 0.0 for head in DSC.HEAD + ['Empty'] }
 
-for ( index, filename) in enumerate(filenames) :
-    full_filename = data_dir + filename
-    print( 'Loading image:', full_filename)
-    i_tensor[ index, :, :, :] = imread( full_filename)
+    for ( index, filename) in enumerate(filenames) :
 
-def random_image( render_with = 'matplotlib') :
+        if filename[ DSC.IDX_EMPTY_1 : DSC.IDX_EMPTY_2] == 'Empty' :
+            percent_ship['Empty'] += fraction
+            percent_rows['Empty'] += fraction
+            percent_cols['Empty'] += fraction
+            percent_head['Empty'] += fraction
+        else :
+            ship = filename[ DSC.IDX_SHIP_1 : DSC.IDX_SHIP_2 ]
+            row  = filename[ DSC.IDX_ROW ]
+            col  = filename[ DSC.IDX_COL ]
+            head = filename[ DSC.IDX_HEAD_1 : DSC.IDX_HEAD_2 ]
+            percent_ship[ship] += fraction
+            percent_rows[ row] += fraction
+            percent_cols[ col] += fraction
+            percent_head[head] += fraction
 
-    index = np.random.randint( num_samples )
-    array = i_tensor[ index, PIX_LIM_U : PIX_LIM_D, PIX_LIM_L : PIX_LIM_R, :]
+    print( 'ANALYSIS OF DATASET:', dataset_dir)
+    print( 'SHIPS:' )
+    for ship in DSC.SHIP :
+        print( '\t' + ship + ': ' + str(percent_ship[ship]) )
+    print( 'ROWS:' )
+    for row in DSC.ROWS + ['Empty'] :
+        print( '\t' +  row + ': ' + str(percent_rows[row]) )
+    print( 'COLS:' )
+    for col in DSC.COLS + ['Empty'] :
+        print( '\t' +  col + ': ' + str(percent_cols[col]) )
+    print( 'HEADINGS:' )
+    for head in DSC.HEAD + ['Empty'] :
+        print( '\t' + head + ': ' + str(percent_head[head]) )
 
-    if render_with == 'matplotlib' :
+    return
+
+def load_samples( dataset_dir) :
+
+    filenames    = get_filenames( dataset_dir)
+    num_samples  = len(filenames)
+    input_tensor = np.zeros( ( num_samples, DSC.CROPPED_IMG_ROWS,
+                                            DSC.CROPPED_IMG_COLS, 3) )
+
+    for ( index, filename) in enumerate(filenames) :
+
+        full_filename       = dataset_dir + filename
+        print( 'Loading image:', full_filename)
+
+        image_array         = imread( full_filename)
+        input_tensor[index] = \
+        image_array[ DSC.ORIG_IMG_ROW_LIM_1 : DSC.ORIG_IMG_ROW_LIM_2,
+                     DSC.ORIG_IMG_COL_LIM_1 : DSC.ORIG_IMG_COL_LIM_2, :]
+
+    return input_tensor
+
+def show_random_sample( tensor, render_with = 'both') :
+
+    num_samples = tensor.shape[0]
+    index       = np.random.randint( num_samples)
+    image_array = tensor[index]
+
+    if render_with in [ 'matplotlib', 'both'] :
         figure( figsize = ( 10, 8) )
-        imshow( array)
-    elif render_with == 'PIL' :
-        image = Image.fromarray( np.uint8(array) )
+        imshow( image_array)
+
+    if render_with in [ 'PIL', 'both'] :
+        image = Image.fromarray( np.uint8(image_array) )
         image.show()
 
-    return array
+    return
