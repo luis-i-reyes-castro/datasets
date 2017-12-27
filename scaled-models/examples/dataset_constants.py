@@ -18,21 +18,22 @@ CROPPED_IMG_ROWS = ORIG_IMG_ROW_LIM_2 - ORIG_IMG_ROW_LIM_1
 CROPPED_IMG_COLS = ORIG_IMG_COL_LIM_2 - ORIG_IMG_COL_LIM_1
 
 # Names of ships, rows, cols and headings
-SHIP = [ 'Cruiser-1', 'Cruiser-2', 'Cruiser-3', 'Freighter',
-         'Fishing-1', 'Fishing-2', 'Empty' ]
-ROWS = [ '1', '2', '3', '4', '5', '6', '7' ]
-COLS = [ 'A', 'B', 'C', 'D' ]
-HEAD = [ 'East', 'West' ]
+NO_SHIP = 'Empty'
+SHIPS   = [ 'Cruiser-1', 'Cruiser-2', 'Cruiser-3', 'Freighter',
+           'Fishing-1', 'Fishing-2' ]
+ROWS    = [ '1', '2', '3', '4', '5', '6', '7' ]
+COLS    = [ 'A', 'B', 'C', 'D' ]
+HEADS   = [ 'East', 'West' ]
 
 # Numbers of rows, cols, headings and ships
-NUM_SHIP = len(SHIP)
-NUM_ROWS = len(ROWS)
-NUM_COLS = len(COLS)
-NUM_HEAD = len(HEAD)
+NUM_SHIPS = len(SHIPS)
+NUM_ROWS  = len(ROWS)
+NUM_COLS  = len(COLS)
+NUM_HEADS = len(HEADS)
 
-# Indices where the word empty starts and ends (if present)
-IDX_EMPTY_1 = 20
-IDX_EMPTY_2 = 25
+# Indices where the token for no-ship starts and ends (if present)
+IDX_NS_1 = 20
+IDX_NS_2 = 25
 
 # Indices where to find row, col, heading and ship (if present)
 IDX_ROW    = 29
