@@ -8,6 +8,8 @@ import numpy as np
 from scipy.misc import imread
 from matplotlib.pyplot import figure, imshow
 from PIL import Image
+from keras.preprocessing.image import ImageDataGenerator
+
 import dataset_constants as DSC
 
 def get_filenames( directory) :
@@ -75,11 +77,15 @@ def load_samples( dataset_dir) :
                                            DSC.ORIG_IMG_COLS, 1),
                             dtype = np.float32)
 
-    out_array_prob = np.zeros( ( num_samples, ), dtype = np.float32)
-    out_array_ship = np.zeros( ( num_samples, DSC.NUM_SHIPS), dtype = np.float32)
-    out_array_row  = np.zeros( ( num_samples, DSC.NUM_ROWS ), dtype = np.float32)
-    out_array_col  = np.zeros( ( num_samples, DSC.NUM_COLS ), dtype = np.float32)
-    out_array_head = np.zeros( ( num_samples, DSC.NUM_HEADS), dtype = np.float32)
+    out_array_prob = np.zeros( shape = ( num_samples, 1), dtype = np.float32)
+    out_array_ship = np.zeros( shape = ( num_samples, DSC.NUM_SHIPS),
+                               dtype = np.float32)
+    out_array_row  = np.zeros( shape = ( num_samples, DSC.NUM_ROWS ),
+                               dtype = np.float32)
+    out_array_col  = np.zeros( shape = ( num_samples, DSC.NUM_COLS ),
+                               dtype = np.float32)
+    out_array_head = np.zeros( shape = ( num_samples, DSC.NUM_HEADS),
+                               dtype = np.float32)
 
     for ( index, filename) in enumerate(filenames) :
 
@@ -94,19 +100,46 @@ def load_samples( dataset_dir) :
             col  = filename[ DSC.IDX_COL ]
             head = filename[ DSC.IDX_HEAD_1 : DSC.IDX_HEAD_2 ]
 
-            out_array_prob[ index ] = 1.0
+            out_array_prob[ index, 0] = 1.0
             out_array_ship[ index, DSC.SHIPS.index(ship) ] = 1.0
             out_array_row[ index, DSC.ROWS.index(row) ]    = 1.0
             out_array_col[ index, DSC.COLS.index(col) ]    = 1.0
             out_array_head[ index, DSC.HEADS.index(head) ] = 1.0
 
-    output_array = ( out_array_prob,
-                     out_array_ship,
-                     out_array_row,
-                     out_array_col,
-                     out_array_head )
+    output_array = np.concatenate( ( out_array_prob,
+                                     out_array_ship,
+                                     out_array_row,
+                                     out_array_col,
+                                     out_array_head), axis = -1)
 
     return ( input_array, output_array)
+
+def batch_generator( X_tensor, Y_tensor, batch_size = 32) :
+
+    generator = ImageDataGenerator( rotation_range = DSC.IDG_ROTATION,
+                                    zoom_range = DSC.IDG_ZOOM,
+                                    width_shift_range = DSC.IDG_WIDTH_SHIFT,
+                                    height_shift_range = DSC.IDG_HEIGHT_SHIFT,
+                                    fill_mode = DSC.IDG_FILL_MODE )
+
+    def cropped_img_batch_generator() :
+
+        cropped_x_batch = \
+        np.zeros( shape = ( batch_size, DSC.CROPPED_IMG_ROWS,
+                                        DSC.CROPPED_IMG_COLS, 1),
+                  dtype = np.float32 )
+
+        for ( x_batch, y_batch) in generator.flow( X_tensor, Y_tensor,
+                                                   batch_size = batch_size) :
+            cropped_x_batch[:,:,:,:] = \
+            x_batch[ :, DSC.ORIG_IMG_ROW_LIM_1 : DSC.ORIG_IMG_ROW_LIM_2,
+                        DSC.ORIG_IMG_COL_LIM_1 : DSC.ORIG_IMG_COL_LIM_2, :]
+
+            yield ( cropped_x_batch, y_batch)
+
+        return
+
+    return cropped_img_batch_generator()
 
 def show_random_sample( tensor, render_with = 'matplotlib') :
 
