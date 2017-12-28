@@ -71,24 +71,21 @@ def load_samples( dataset_dir) :
     filenames   = get_filenames( dataset_dir)
     num_samples = len(filenames)
 
-    input_array = np.zeros( ( num_samples, DSC.CROPPED_IMG_ROWS,
-                                           DSC.CROPPED_IMG_COLS, 3) )
+    input_array = np.zeros( ( num_samples, DSC.ORIG_IMG_ROWS,
+                                           DSC.ORIG_IMG_COLS, 1),
+                            dtype = np.float32)
 
-    out_array_prob = np.zeros( ( num_samples, ) )
-    out_array_ship = np.zeros( ( num_samples, DSC.NUM_SHIPS) )
-    out_array_row  = np.zeros( ( num_samples, DSC.NUM_ROWS ) )
-    out_array_col  = np.zeros( ( num_samples, DSC.NUM_COLS ) )
-    out_array_head = np.zeros( ( num_samples, DSC.NUM_HEADS) )
+    out_array_prob = np.zeros( ( num_samples, ), dtype = np.float32)
+    out_array_ship = np.zeros( ( num_samples, DSC.NUM_SHIPS), dtype = np.float32)
+    out_array_row  = np.zeros( ( num_samples, DSC.NUM_ROWS ), dtype = np.float32)
+    out_array_col  = np.zeros( ( num_samples, DSC.NUM_COLS ), dtype = np.float32)
+    out_array_head = np.zeros( ( num_samples, DSC.NUM_HEADS), dtype = np.float32)
 
     for ( index, filename) in enumerate(filenames) :
 
-        full_filename       = dataset_dir + filename
+        full_filename      = dataset_dir + filename
         print( 'Loading image:', full_filename)
-
-        image_array         = imread( full_filename)
-        input_array[index] = \
-        image_array[ DSC.ORIG_IMG_ROW_LIM_1 : DSC.ORIG_IMG_ROW_LIM_2,
-                     DSC.ORIG_IMG_COL_LIM_1 : DSC.ORIG_IMG_COL_LIM_2, :]
+        input_array[ index, :, :, 0] = imread( full_filename, flatten = True)
 
         if not filename[ DSC.IDX_NS_1 : DSC.IDX_NS_2] == DSC.NO_SHIP :
 
@@ -111,15 +108,15 @@ def load_samples( dataset_dir) :
 
     return ( input_array, output_array)
 
-def show_random_sample( tensor, render_with = 'both') :
+def show_random_sample( tensor, render_with = 'matplotlib') :
 
     num_samples = tensor.shape[0]
     index       = np.random.randint( num_samples)
-    image_array = tensor[index]
+    image_array = tensor[ index, :, :, 0]
 
     if render_with in [ 'matplotlib', 'both'] :
         figure( figsize = ( 10, 8) )
-        imshow( image_array)
+        imshow( image_array )
 
     if render_with in [ 'PIL', 'both'] :
         image = Image.fromarray( np.uint8(image_array) )
