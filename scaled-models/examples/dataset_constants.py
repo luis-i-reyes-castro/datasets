@@ -17,6 +17,13 @@ ORIG_IMG_COL_LIM_2  = 600
 CROPPED_IMG_ROWS = ORIG_IMG_ROW_LIM_2 - ORIG_IMG_ROW_LIM_1
 CROPPED_IMG_COLS = ORIG_IMG_COL_LIM_2 - ORIG_IMG_COL_LIM_1
 
+# Image Data Generator (IDG) configuration
+IDG_ROTATION     = 1.5
+IDG_ZOOM         = 0.02
+IDG_WIDTH_SHIFT  = 0.02
+IDG_HEIGHT_SHIFT = 0.02
+IDG_FILL_MODE    = 'constant'
+
 # Names of ships, rows, cols and headings
 NO_SHIP = 'Empty'
 SHIPS   = [ 'Cruiser-1', 'Cruiser-2', 'Cruiser-3', 'Freighter',
@@ -42,3 +49,15 @@ IDX_HEAD_1 = 40
 IDX_HEAD_2 = 44
 IDX_SHIP_1 = 50
 IDX_SHIP_2 = 59
+
+# Indices in the output array where to find ship probability,
+# ship, row, col and heading
+OUT_IDX_PROB   = 0
+OUT_IDX_SHIP_1 = 1
+OUT_IDX_SHIP_2 = OUT_IDX_SHIP_1 + NUM_SHIPS
+OUT_IDX_ROW_1  = OUT_IDX_SHIP_2
+OUT_IDX_ROW_2  = OUT_IDX_ROW_1 + NUM_ROWS
+OUT_IDX_COL_1  = OUT_IDX_ROW_2
+OUT_IDX_COL_2  = OUT_IDX_COL_1 + NUM_COLS
+OUT_IDX_HEAD_1 = OUT_IDX_COL_2
+OUT_IDX_HEAD_2 = OUT_IDX_HEAD_1 + NUM_HEADS
