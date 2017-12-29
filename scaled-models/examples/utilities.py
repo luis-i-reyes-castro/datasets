@@ -19,6 +19,18 @@ def get_filenames( directory) :
 
     return os.listdir(directory)
 
+def ensure_directory( directory) :
+
+    directory += '/' if not directory[-1] == '/' else ''
+    directory = os.path.dirname( directory + 'dummy-filename.txt' )
+
+    if not os.path.exists( directory) :
+        print( 'Did not find directory', directory)
+        print( 'Creating directory:', directory)
+        os.makedirs( directory)
+
+    return
+
 def print_dataset_stats( dataset_dir) :
 
     filenames   = get_filenames( dataset_dir)
@@ -68,7 +80,7 @@ def print_dataset_stats( dataset_dir) :
 
     return
 
-def load_samples( dataset_dir) :
+def load_samples( dataset_dir, verbose = False) :
 
     filenames   = get_filenames( dataset_dir)
     num_samples = len(filenames)
@@ -87,10 +99,13 @@ def load_samples( dataset_dir) :
     out_array_head = np.zeros( shape = ( num_samples, DSC.NUM_HEADS),
                                dtype = np.float32)
 
+    print( 'LOADING SAMPLES...' )
     for ( index, filename) in enumerate(filenames) :
 
         full_filename      = dataset_dir + filename
-        print( 'Loading image:', full_filename)
+        if verbose :
+            print( 'Loading image:', full_filename)
+
         input_array[ index, :, :, 0] = imread( full_filename, flatten = True)
 
         if not filename[ DSC.IDX_NS_1 : DSC.IDX_NS_2] == DSC.NO_SHIP :
@@ -124,18 +139,28 @@ def batch_generator( X_tensor, Y_tensor, batch_size = 32) :
 
     def cropped_img_batch_generator() :
 
-        cropped_x_batch = \
-        np.zeros( shape = ( batch_size, DSC.CROPPED_IMG_ROWS,
-                                        DSC.CROPPED_IMG_COLS, 1),
-                  dtype = np.float32 )
-
         for ( x_batch, y_batch) in generator.flow( X_tensor, Y_tensor,
                                                    batch_size = batch_size) :
-            cropped_x_batch[:,:,:,:] = \
+            cropped_x_batch = \
             x_batch[ :, DSC.ORIG_IMG_ROW_LIM_1 : DSC.ORIG_IMG_ROW_LIM_2,
                         DSC.ORIG_IMG_COL_LIM_1 : DSC.ORIG_IMG_COL_LIM_2, :]
 
-            yield ( cropped_x_batch, y_batch)
+            y_batch_prob = y_batch[ :, 0 : 1 ]
+            y_batch_ship = \
+            y_batch[ :, DSC.OUT_IDX_SHIP_1 : DSC.OUT_IDX_SHIP_2 ]
+            y_batch_row  = \
+            y_batch[ :,  DSC.OUT_IDX_ROW_1 :  DSC.OUT_IDX_ROW_2 ]
+            y_batch_col  = \
+            y_batch[ :,  DSC.OUT_IDX_COL_1 :  DSC.OUT_IDX_COL_2 ]
+            y_batch_head = \
+            y_batch[ :, DSC.OUT_IDX_HEAD_1 : DSC.OUT_IDX_HEAD_2 ]
+
+
+            yield ( cropped_x_batch, [ y_batch_prob,
+                                       y_batch_ship,
+                                       y_batch_row,
+                                       y_batch_col,
+                                       y_batch_head ] )
 
         return
 
