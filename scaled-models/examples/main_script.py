@@ -6,7 +6,7 @@
 import numpy as np
 
 import utilities as util
-from example_models import Detector_CNN
+from example_models import DetectorCNN
 
 
 ( X_train, Y_train) = util.load_samples( '../set-A_train/' )
@@ -26,7 +26,8 @@ epochs     = 100
 steps_train = X_train.shape[0] // batch_size
 steps_test  = X_test.shape[0]  // batch_size
 
-dcnn      = Detector_CNN( batch_size)
+dcnn = DetectorCNN( batch_size)
+
 set_A_gen = dcnn.batch_generator( X_train, Y_train, batch_size)
 set_B_gen = dcnn.batch_generator( X_test,  Y_test,  batch_size)
 

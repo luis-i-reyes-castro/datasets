@@ -34,7 +34,7 @@ def get_filenames( directory) :
 
 def get_todays_date() :
 
-    return dtdt.now().strftime('%h-%d_%H.%M.%S')
+    return dtdt.now().strftime('%h-%d_%H:%M:%S')
 
 def print_dataset_stats( dataset_dir) :
 

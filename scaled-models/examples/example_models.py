@@ -11,22 +11,37 @@ from keras.optimizers import SGD
 from keras.utils.vis_utils import plot_model
 from keras.preprocessing.image import ImageDataGenerator
 
-import utilities as util
+import utilities as utils
 import dataset_constants as DSC
 
-class Detector_CNN :
+class DetectorCNN :
 
-    OUTPUT_DIR   = 'trained-models/'
-    OUTPUT_FILE  = 'model_[TIME]_R-[REG]_L-[LR].pkl'
-    WEIGHTS_FILE = 'weights_[TIME]_R-[REG]_L-[LR].h5'
-    TB_LOG_DIR   = 'tensorboard-logs/' + OUTPUT_FILE
+    MODEL_DIR    = 'trained-models/'
+    MODEL_ID     = 'model-[TIME]_LR-[LR]_REG-[REG]_DP-[DP]'
+    TB_LOG_DIR   = 'tensorboard-logs/'
 
     def __init__( self, batch_size = 32,
                         learning_rate = 1E-3,
                         regularization_rate = 1E-4,
                         dropout_rate = 0.2 ) :
 
-        self.batch_size = batch_size
+        self.batch_size          = batch_size
+        self.learning_rate       = learning_rate
+        self.regularization_rate = regularization_rate
+        self.dropout_rate        = dropout_rate
+
+        timestamp     = utils.get_todays_date()
+        self.MODEL_ID = self.MODEL_ID.replace( '[TIME]', timestamp)
+        self.MODEL_ID = self.MODEL_ID.replace( '[LR]',
+                                               str(learning_rate) )
+        self.MODEL_ID = self.MODEL_ID.replace( '[REG]',
+                                               str(regularization_rate) )
+        self.MODEL_ID = self.MODEL_ID.replace( '[DP]',
+                                               str(dropout_rate) )
+
+        self.model_definition = self.MODEL_DIR + self.MODEL_ID + '.pkl'
+        self.model_weights    = self.MODEL_DIR + self.MODEL_ID + '_weights.h5'
+        self.tb_log_dir       = self.TB_LOG_DIR + self.MODEL_ID
 
         input_shape = ( DSC.CROPPED_IMG_ROWS, DSC.CROPPED_IMG_COLS, 1)
 
@@ -128,10 +143,14 @@ class Detector_CNN :
                             loss_weights = loss_weights,
                             metrics = ['accuracy'] )
 
-        self.model.summary()
-        plot_model( self.model )
-
         return
+
+    def show_model( self, filename = 'Model-Architecture.jpg') :
+
+        self.model.summary()
+
+        return plot_model( model = self.model,
+                           show_shapes = True, to_file = filename)
 
     def batch_generator( self, X_tensor, Y_tensor, batch_size = 32) :
 
