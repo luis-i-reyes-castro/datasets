@@ -4,20 +4,14 @@
 """
 
 import os
+from datetime import datetime as dtdt
+
 import numpy as np
 from scipy.misc import imread
 from matplotlib.pyplot import figure, imshow
 from PIL import Image
-from keras.preprocessing.image import ImageDataGenerator
 
 import dataset_constants as DSC
-
-def get_filenames( directory) :
-
-    if not os.path.exists(directory) :
-        raise Exception( 'Could not find directory: ' + directory )
-
-    return os.listdir(directory)
 
 def ensure_directory( directory) :
 
@@ -30,6 +24,17 @@ def ensure_directory( directory) :
         os.makedirs( directory)
 
     return
+
+def get_filenames( directory) :
+
+    if not os.path.exists(directory) :
+        raise Exception( 'Could not find directory: ' + directory )
+
+    return os.listdir(directory)
+
+def get_todays_date() :
+
+    return dtdt.now().strftime('%h-%d_%H.%M.%S')
 
 def print_dataset_stats( dataset_dir) :
 
@@ -128,43 +133,6 @@ def load_samples( dataset_dir, verbose = False) :
                                      out_array_head), axis = -1)
 
     return ( input_array, output_array)
-
-def batch_generator( X_tensor, Y_tensor, batch_size = 32) :
-
-    generator = ImageDataGenerator( rotation_range = DSC.IDG_ROTATION,
-                                    zoom_range = DSC.IDG_ZOOM,
-                                    width_shift_range = DSC.IDG_WIDTH_SHIFT,
-                                    height_shift_range = DSC.IDG_HEIGHT_SHIFT,
-                                    fill_mode = DSC.IDG_FILL_MODE )
-
-    def cropped_img_batch_generator() :
-
-        for ( x_batch, y_batch) in generator.flow( X_tensor, Y_tensor,
-                                                   batch_size = batch_size) :
-            cropped_x_batch = \
-            x_batch[ :, DSC.ORIG_IMG_ROW_LIM_1 : DSC.ORIG_IMG_ROW_LIM_2,
-                        DSC.ORIG_IMG_COL_LIM_1 : DSC.ORIG_IMG_COL_LIM_2, :]
-
-            y_batch_prob = y_batch[ :, 0 : 1 ]
-            y_batch_ship = \
-            y_batch[ :, DSC.OUT_IDX_SHIP_1 : DSC.OUT_IDX_SHIP_2 ]
-            y_batch_row  = \
-            y_batch[ :,  DSC.OUT_IDX_ROW_1 :  DSC.OUT_IDX_ROW_2 ]
-            y_batch_col  = \
-            y_batch[ :,  DSC.OUT_IDX_COL_1 :  DSC.OUT_IDX_COL_2 ]
-            y_batch_head = \
-            y_batch[ :, DSC.OUT_IDX_HEAD_1 : DSC.OUT_IDX_HEAD_2 ]
-
-
-            yield ( cropped_x_batch, [ y_batch_prob,
-                                       y_batch_ship,
-                                       y_batch_row,
-                                       y_batch_col,
-                                       y_batch_head ] )
-
-        return
-
-    return cropped_img_batch_generator()
 
 def show_random_sample( tensor, render_with = 'matplotlib') :
 
