@@ -54,7 +54,7 @@ class DetectorCNN :
 
         layer_00 = Input( shape = input_shape, name = 'Input_Images')
 
-        layer_1A = Conv2D( filters = 32,
+        layer_1A = Conv2D( filters = 64,
                            kernel_size = (3,3), strides = (2,2),
                            name = 'Convolution-1',
                            activation = 'relu',
@@ -78,7 +78,7 @@ class DetectorCNN :
         layer_2B = Dropout( rate = dropout_rate,
                             name = 'Dropout-2' )( layer_2A )
 
-        layer_3A = Conv2D( filters = 32,
+        layer_3A = Conv2D( filters = 128,
                            kernel_size = (3,3), strides = (2,2),
                            name = 'Convolution-3',
                            activation = 'relu',
@@ -90,40 +90,78 @@ class DetectorCNN :
         layer_3B = Dropout( rate = dropout_rate,
                             name = 'Dropout-3' )( layer_3A )
 
-        layer_MP = MaxPooling2D( name = 'Max-pooling',
-                                 pool_size = (2,4) )( layer_3B )
+        layer_4_1A = Conv2D( filters = 256,
+                             kernel_size = (3,3), strides = (2,2),
+                             name = 'Convolution-4-1',
+                             activation = 'relu',
+                             data_format = 'channels_last',
+                             padding = 'same',
+                             kernel_regularizer = \
+                             l2( regularization_rate) )( layer_3B )
 
-        layer_FL = Flatten( name = 'Flatten-into-Vector')( layer_MP )
+        layer_4_1B = Dropout( rate = dropout_rate,
+                              name = 'Dropout-4-1' )( layer_4_1A )
 
-        layer_D1 = Dense( units = 1024, activation = 'softsign',
-                          name = 'Fully-Connected',
-                          kernel_regularizer = \
-                          l2( regularization_rate) )( layer_FL )
+        layer_5_1A = Conv2D( filters = 256,
+                             kernel_size = (3,3), strides = (2,2),
+                             name = 'Convolution-5-1',
+                             activation = 'relu',
+                             data_format = 'channels_last',
+                             padding = 'same',
+                             kernel_regularizer = \
+                             l2( regularization_rate) )( layer_4_1B )
+
+        layer_5_1B = Dropout( rate = dropout_rate,
+                              name = 'Dropout-5-1' )( layer_5_1A )
+
+        layer_6_1 = MaxPooling2D( name = 'Max-pooling',
+                                 pool_size = (3,4) )( layer_5_1B )
+
+        layer_7_1 = Flatten( name = 'Flatten-1')( layer_6_1 )
+
+        layer_8_1 = Dense( units = 512, activation = 'softsign',
+                           name = 'Fully-Connected',
+                           kernel_regularizer = \
+                           l2( regularization_rate) )( layer_7_1 )
 
         output_prob = Dense( units = 1, activation = 'sigmoid',
                              name = 'Output_Ship-Prob',
                              kernel_regularizer = \
-                             l2( regularization_rate) )( layer_D1 )
+                             l2( regularization_rate) )( layer_8_1 )
 
         output_ship = Dense( units = DSC.NUM_SHIPS, activation = 'softmax',
                              name = 'Output_Ship',
                              kernel_regularizer = \
-                             l2( regularization_rate) )( layer_D1 )
-
-        output_row  = Dense( units = DSC.NUM_ROWS, activation = 'softmax',
-                             name = 'Output_Row',
-                             kernel_regularizer = \
-                             l2( regularization_rate) )( layer_D1 )
-
-        output_col  = Dense( units = DSC.NUM_COLS, activation = 'softmax',
-                             name = 'Output_Col',
-                             kernel_regularizer = \
-                             l2( regularization_rate) )( layer_D1 )
+                             l2( regularization_rate) )( layer_8_1 )
 
         output_head = Dense( units = DSC.NUM_HEADS, activation = 'softmax',
                              name = 'Output_Head',
                              kernel_regularizer = \
-                             l2( regularization_rate) )( layer_D1 )
+                             l2( regularization_rate) )( layer_8_1 )
+
+        layer_4_2A = Conv2D( filters = 1,
+                             kernel_size = (3,3),
+                             name = 'Convolution-4-2',
+                             activation = 'relu',
+                             data_format = 'channels_last',
+                             padding = 'same',
+                             kernel_regularizer = \
+                             l2( regularization_rate) )( layer_3B )
+
+        layer_4_2B = Dropout( rate = dropout_rate,
+                              name = 'Dropout-4-2' )( layer_4_2A )
+
+        layer_5_2 = Flatten( name = 'Flatten-2')( layer_4_2B )
+
+        output_row  = Dense( units = DSC.NUM_ROWS, activation = 'softmax',
+                             name = 'Output_Row',
+                             kernel_regularizer = \
+                             l2( regularization_rate) )( layer_5_2 )
+
+        output_col  = Dense( units = DSC.NUM_COLS, activation = 'softmax',
+                             name = 'Output_Col',
+                             kernel_regularizer = \
+                             l2( regularization_rate) )( layer_5_2 )
 
         output_tensors = [ output_prob, output_ship,
                            output_row, output_col, output_head ]
