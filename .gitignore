@@ -1,5 +1,7 @@
 __pycache__/
+trained-models/
 *.h5
-*.png
+*.jpg
 *.npy
+*.png
 *.tfevents.*
