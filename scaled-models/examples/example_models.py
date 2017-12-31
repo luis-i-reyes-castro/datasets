@@ -232,7 +232,7 @@ class DetectorCNN :
                      patience = None,
                      workers = 4,
                      augment_validation_data = True,
-                     monitor = 'val_Output_Row_acc' ) :
+                     monitor = 'val_loss' ) :
 
         self.save_model()
         self.model.compile( optimizer = self.optimizer,
