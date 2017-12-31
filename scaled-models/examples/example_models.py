@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """
 @author: Luis I. Reyes-Castro
+
+COPYRIGHT
+
+All contributions by Luis I. Reyes-Castro:
+Copyright (c) 2018, Luis Ignacio Reyes Castro.
+All rights reserved.
 """
 
 from keras.models import Model
@@ -9,6 +15,7 @@ from keras.layers import Flatten, Dense
 from keras.regularizers import l2
 from keras.optimizers import SGD
 from keras.utils.vis_utils import plot_model
+from keras.callbacks import TensorBoard
 from keras.preprocessing.image import ImageDataGenerator
 
 import utilities as utils
@@ -20,9 +27,9 @@ class DetectorCNN :
     MODEL_ID     = 'model-[TIME]_LR-[LR]_REG-[REG]_DP-[DP]'
     TB_LOG_DIR   = 'tensorboard-logs/'
 
-    def __init__( self, batch_size = 32,
-                        learning_rate = 1E-3,
-                        regularization_rate = 1E-4,
+    def __init__( self, batch_size = 16,
+                        learning_rate = 1E-4,
+                        regularization_rate = 1E-5,
                         dropout_rate = 0.2 ) :
 
         self.batch_size          = batch_size
@@ -84,11 +91,11 @@ class DetectorCNN :
                             name = 'Dropout-3' )( layer_3A )
 
         layer_MP = MaxPooling2D( name = 'Max-pooling',
-                                 pool_size = (6,8) )( layer_3B )
+                                 pool_size = (2,4) )( layer_3B )
 
         layer_FL = Flatten( name = 'Flatten-into-Vector')( layer_MP )
 
-        layer_D1 = Dense( units = 512, activation = 'softsign',
+        layer_D1 = Dense( units = 1024, activation = 'softsign',
                           name = 'Fully-Connected',
                           kernel_regularizer = \
                           l2( regularization_rate) )( layer_FL )
@@ -151,6 +158,51 @@ class DetectorCNN :
 
         return plot_model( model = self.model,
                            show_shapes = True, to_file = filename)
+
+    def train( self, batch_size = 16,
+                     epochs = 200,
+                     workers = 4,
+                     split_data = True,
+                     augment_validation_data = True ) :
+
+        utils.ensure_directory( self.tb_log_dir)
+
+        callbacks = [ TensorBoard( log_dir = self.tb_log_dir,
+                                   write_graph = False ) ]
+
+        if split_data :
+
+            ( X_t, Y_t) = utils.load_samples( DSC.SET_A_DIR)
+            ( X_v, Y_v) = utils.load_samples( DSC.SET_B_DIR)
+
+            self.X_mean = X_t.mean()
+            X_t -= self.X_mean
+            X_v -= self.X_mean
+
+            self.X_std = X_t.std()
+            X_t /= self.X_std
+            X_v /= self.X_std
+
+            t_data = self.batch_generator( X_t, Y_t, batch_size)
+
+            if augment_validation_data :
+                v_data = self.batch_generator( X_v,  Y_v,  batch_size)
+            else :
+                v_data = ( X_v,  Y_v)
+
+            t_steps = X_t.shape[0] // batch_size
+            v_steps = X_v.shape[0] // batch_size
+
+            self.model.fit_generator( generator = t_data,
+                                      steps_per_epoch = t_steps,
+                                      validation_data = v_data,
+                                      validation_steps = v_steps,
+                                      epochs = epochs,
+                                      use_multiprocessing = True,
+                                      workers = workers,
+                                      callbacks = callbacks )
+
+        return
 
     def batch_generator( self, X_tensor, Y_tensor, batch_size = 32) :
 
