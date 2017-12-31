@@ -10,6 +10,7 @@ import numpy as np
 from scipy.misc import imread
 from matplotlib.pyplot import figure, imshow
 from PIL import Image
+from pickle import dump, load, HIGHEST_PROTOCOL
 
 import dataset_constants as DSC
 
@@ -24,6 +25,10 @@ def ensure_directory( directory) :
         os.makedirs( directory)
 
     return
+
+def exists_file( filename) :
+
+    return os.path.exists( filename)
 
 def get_filenames( directory) :
 
@@ -149,3 +154,23 @@ def show_random_sample( tensor, render_with = 'matplotlib') :
         image.show()
 
     return
+
+def serialize( obj_to_serialize, filename) :
+
+    filename += '' if filename[-4:] == '.pkl' else '.pkl'
+
+    handle = open( filename, 'wb')
+    dump( obj_to_serialize, handle, HIGHEST_PROTOCOL)
+    handle.close()
+
+    return
+
+def de_serialize( filename) :
+
+    filename += '' if filename[-4:] == '.pkl' else '.pkl'
+
+    handle = open( filename, 'rb')
+    deserialized_obj = load( handle)
+    handle.close()
+
+    return deserialized_obj
