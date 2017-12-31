@@ -228,8 +228,7 @@ class DetectorCNN :
 
         return dcnn
 
-    def train( self, batch_size = 16,
-                     epochs = 400,
+    def train( self, epochs = 200,
                      patience = None,
                      workers = 4,
                      augment_validation_data = True,
@@ -268,15 +267,15 @@ class DetectorCNN :
         X_t /= self.X_std
         X_v /= self.X_std
 
-        t_data = self.batch_generator( X_t, Y_t, batch_size)
+        t_data = self.batch_generator( X_t, Y_t)
 
         if augment_validation_data :
-            v_data = self.batch_generator( X_v,  Y_v,  batch_size)
+            v_data = self.batch_generator( X_v,  Y_v)
         else :
             v_data = ( X_v,  Y_v)
 
-        t_steps = X_t.shape[0] // batch_size
-        v_steps = X_v.shape[0] // batch_size
+        t_steps = X_t.shape[0] // self.batch_size
+        v_steps = X_v.shape[0] // self.batch_size
 
         self.model.fit_generator( generator = t_data,
                                   steps_per_epoch = t_steps,
@@ -289,7 +288,7 @@ class DetectorCNN :
 
         return
 
-    def batch_generator( self, X_tensor, Y_tensor, batch_size = 32) :
+    def batch_generator( self, X_tensor, Y_tensor) :
 
         gen_ = ImageDataGenerator( rotation_range = DSC.IDG_ROTATION,
                                    zoom_range = DSC.IDG_ZOOM,
