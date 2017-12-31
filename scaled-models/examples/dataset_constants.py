@@ -3,6 +3,10 @@
 @author: Luis I. Reyes Castro
 """
 
+## Directories for set-A (train) and set-B (validation) data
+SET_A_DIR = '../set-A_train/'
+SET_B_DIR = '../set-B_test/'
+
 # Number of pixels in the image across its row and col dimensions
 ORIG_IMG_ROWS = 480
 ORIG_IMG_COLS = 640
@@ -18,10 +22,10 @@ CROPPED_IMG_ROWS = ORIG_IMG_ROW_LIM_2 - ORIG_IMG_ROW_LIM_1
 CROPPED_IMG_COLS = ORIG_IMG_COL_LIM_2 - ORIG_IMG_COL_LIM_1
 
 # Image Data Generator (IDG) configuration
-IDG_ROTATION     = 1.5
-IDG_ZOOM         = 0.02
-IDG_WIDTH_SHIFT  = 0.02
-IDG_HEIGHT_SHIFT = 0.02
+IDG_ROTATION     = 0.50
+IDG_ZOOM         = 0.01
+IDG_WIDTH_SHIFT  = 0.01
+IDG_HEIGHT_SHIFT = 0.01
 IDG_FILL_MODE    = 'constant'
 
 # Names of ships, rows, cols and headings
