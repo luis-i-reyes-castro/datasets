@@ -11,6 +11,7 @@ from scipy.misc import imread
 from matplotlib.pyplot import figure, imshow
 from PIL import Image
 from pickle import dump, load, HIGHEST_PROTOCOL
+from cv2 import VideoCapture, imwrite
 
 import dataset_constants as DSC
 
@@ -174,3 +175,25 @@ def de_serialize( filename) :
     handle.close()
 
     return deserialized_obj
+
+def snap_photo( ramp_frames = 16) :
+
+    filename = get_todays_date()
+    filename += '.jpg'
+
+    camera = VideoCapture(1)
+
+    print( 'Ramping camera...' )
+    for i in range(ramp_frames) :
+        ( ret_val, image) = camera.read()
+
+    print( 'Capturing and saving image:', filename)
+    ret_val, image = camera.read()
+    imwrite( filename, image)
+    camera.release()
+
+    input_array = np.zeros( shape = ( 1, DSC.ORIG_IMG_ROWS, DSC.ORIG_IMG_COLS, 1),
+                            dtype = np.float32 )
+    input_array[ 0, :, :, 0] = imread( filename, flatten = True)
+
+    return input_array
