@@ -24,3 +24,6 @@ while True :
     dcnn = DetectorCNN( batch_size, lr, rr, dr)
     dcnn.show_model()
     dcnn.train( epochs, patience, workers)
+
+#dcnn = DetectorCNN.load_model('trained-models/model-Dec-31_06:55:13_LR-0.004_REG-0.0002_DP-0.3.pkl')
+#output_tensor = dcnn.run()

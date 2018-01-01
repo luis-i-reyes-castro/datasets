@@ -9,6 +9,7 @@ Copyright (c) 2018, Luis Ignacio Reyes Castro.
 All rights reserved.
 """
 
+import numpy as np
 from keras.models import Model
 from keras.layers import Input, Conv2D, MaxPooling2D, Dropout
 from keras.layers import Flatten, Dense
@@ -203,7 +204,9 @@ class DetectorCNN :
                        'dropout_rate' : self.dropout_rate,
                        'model_definition' : self.model_definition,
                        'model_weights' : self.model_weights,
-                       'model_tb_log' : self.tb_log_dir }
+                       'model_tb_log' : self.tb_log_dir,
+                       'X_mean' : 117.18408,
+                       'X_std' : 27.43093 }
 
         utils.ensure_directory( self.MODEL_DIR)
         utils.serialize( model_dict, self.model_definition)
@@ -226,6 +229,9 @@ class DetectorCNN :
 
         dcnn.model.load_weights( model_def['model_weights'] )
 
+        dcnn.X_mean = 117.18408 #model_def['X_mean']
+        dcnn.X_std  = 27.43093 #model_def['X_std']
+
         return dcnn
 
     def train( self, epochs = 200,
@@ -233,6 +239,27 @@ class DetectorCNN :
                      workers = 4,
                      augment_validation_data = True,
                      monitor = 'val_loss' ) :
+
+        ( X_t, Y_t) = utils.load_samples( DSC.SET_A_DIR)
+        ( X_v, Y_v) = utils.load_samples( DSC.SET_B_DIR)
+
+        self.X_mean = X_t.mean()
+        X_t -= self.X_mean
+        X_v -= self.X_mean
+
+        self.X_std = X_t.std()
+        X_t /= self.X_std
+        X_v /= self.X_std
+
+        t_data = self.batch_generator( X_t, Y_t)
+
+        if augment_validation_data :
+            v_data = self.batch_generator( X_v,  Y_v)
+        else :
+            v_data = ( X_v,  Y_v)
+
+        t_steps = X_t.shape[0] // self.batch_size
+        v_steps = X_v.shape[0] // self.batch_size
 
         self.save_model()
         self.model.compile( optimizer = self.optimizer,
@@ -255,27 +282,6 @@ class DetectorCNN :
             call_es = EarlyStopping( monitor = monitor,
                                      patience = patience )
             callbacks.append( call_es)
-
-        ( X_t, Y_t) = utils.load_samples( DSC.SET_A_DIR)
-        ( X_v, Y_v) = utils.load_samples( DSC.SET_B_DIR)
-
-        self.X_mean = X_t.mean()
-        X_t -= self.X_mean
-        X_v -= self.X_mean
-
-        self.X_std = X_t.std()
-        X_t /= self.X_std
-        X_v /= self.X_std
-
-        t_data = self.batch_generator( X_t, Y_t)
-
-        if augment_validation_data :
-            v_data = self.batch_generator( X_v,  Y_v)
-        else :
-            v_data = ( X_v,  Y_v)
-
-        t_steps = X_t.shape[0] // self.batch_size
-        v_steps = X_v.shape[0] // self.batch_size
 
         self.model.fit_generator( generator = t_data,
                                   steps_per_epoch = t_steps,
@@ -327,3 +333,40 @@ class DetectorCNN :
             return
 
         return cropped_img_batch_generator()
+
+    def run( self) :
+
+        input_tensor = utils.snap_photo()
+        input_tensor = \
+        input_tensor[ :, DSC.ORIG_IMG_ROW_LIM_1 : DSC.ORIG_IMG_ROW_LIM_2,
+                         DSC.ORIG_IMG_COL_LIM_1 : DSC.ORIG_IMG_COL_LIM_2, :]
+
+        input_tensor -= self.X_mean
+        input_tensor /= self.X_std
+
+        output_tensor = self.model.predict( input_tensor)
+
+        print( 'IMAGE ANALYSIS:' )
+
+        if output_tensor[0][0,0] < 0.5 :
+            print( '\t' + 'No ship present' )
+
+        else :
+
+            ship_index = np.argmax( output_tensor[1][0,:] )
+            ship       = DSC.SHIPS[ship_index]
+            print( '\t' + 'Ship: ' + ship )
+
+            row_index  = np.argmax( output_tensor[2][0,:] )
+            row        = DSC.ROWS[row_index]
+            print( '\t' + 'Row: ' + row )
+
+            col_index  = np.argmax( output_tensor[3][0,:] )
+            col        = DSC.COLS[col_index]
+            print( '\t' + 'Column: ' + col )
+
+            head_index = np.argmax( output_tensor[4][0,:] )
+            head       = DSC.HEADS[head_index]
+            print( '\t' + 'Heading: ' + head )
+
+        return
