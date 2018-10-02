@@ -11,8 +11,8 @@ from keras.models import Model
 from keras.utils.vis_utils import plot_model
 
 # Declares training/validation directories and filename format
-dir_training    = '../find-the-puck/training/'
-dir_validation  = '../find-the-puck/validation/'
+dir_training    = '../set-A_train/'
+dir_validation  = '../set-B_test/'
 filename_format = 'row_[XX]_col_[YY].jpg'
 
 # Number of vertical/horizontal pixels
@@ -50,7 +50,7 @@ inputs_train_std  = np.std( inputs_train)
 inputs_train      = ( inputs_train - inputs_train_mean ) / inputs_train_std
 
 # Extracts number of validation samples
-validation_files = os.listdir('../find-the-puck/validation')
+validation_files       = os.listdir(dir_validation)
 num_validation_samples = len(validation_files)
 
 # Declares empty arrays for validation inputs and outputs
@@ -73,35 +73,35 @@ for ( index, filename) in enumerate(validation_files) :
 # Normalizes the validation samples
 inputs_valid = ( inputs_valid - inputs_train_mean ) / inputs_train_std
 
+# Declares the architecture of the model (neural net)
 sample_shape = ( pixels_v, pixels_h, 1)
-
 layer_0 = Input( shape = sample_shape, name = 'Input_Images')
-
 layer_1 = Conv2D( filters = 1, kernel_size = (200,200), strides = ( 20, 20),
                   name = '2D-Convolution',
                   activation = 'softsign' )( layer_0 )
-
 layer_2 = Flatten( name = 'Flatten_Image-into-Vector' )( layer_1 )
-
 row_output = Dense( units = rows, activation = 'softmax',
                     name = 'Row_Probabilities' )( layer_2 )
 col_output = Dense( units = columns, activation = 'softmax',
                     name = 'Col_Probabilities' )( layer_2 )
-
 neural_net = Model( inputs = layer_0, outputs = [ row_output, col_output])
 
+# Declares the loss functions
 losses = { 'Row_Probabilities' : 'categorical_crossentropy',
            'Col_Probabilities' : 'categorical_crossentropy' }
 
+# Compiles and plots the model
 neural_net.compile( optimizer = 'sgd', loss = losses, metrics = ['accuracy'] )
-
 plot_model( neural_net, to_file = 'model-architecture.png')
 
+# Fits the model's weights and saves them, or... 
 neural_net.fit( x = inputs_train,
                 y = [ output_train_X, output_train_Y], epochs = 100,
                 validation_split = 0.2)
 neural_net.save_weights('model-weights.h5')
+# ... loads weights from file
+# neural_net.load_weights('model-weights.h5')
 
-#neural_net.load_weights('model-weights.h5')
-
+# Predicts the outputs corresponding to the validation inputs
 ( pred_X, pred_Y) = neural_net.predict( inputs_valid)
+
