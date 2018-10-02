@@ -1,3 +1,3 @@
 # Datasets
 
-Toy datasets for machine learning experiments. 
+Toy datasets for machine learning experiments 
